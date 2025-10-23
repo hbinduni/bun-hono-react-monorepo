@@ -1,4 +1,4 @@
-import type {ApiResponse, Feedback} from '@shared/types'
+import type {ApiResponse, Item} from '@shared/types'
 import {Hono} from 'hono'
 import {cors} from 'hono/cors'
 
@@ -8,19 +8,31 @@ const app = new Hono()
 app.use('/*', cors())
 
 app.get('/', (c) => {
-  return c.text('User Feedback API - Hono + Bun')
+  return c.json({
+    name: 'Monorepo API',
+    version: '1.0.0',
+    stack: 'Hono + Bun',
+    endpoints: {
+      items: {
+        method: 'GET',
+        path: '/api/items',
+        description: 'Get all items',
+      },
+    },
+    frontend: 'http://localhost:5173',
+  })
 })
 
 // Example API endpoint using shared types
-app.get('/api/feedback', (c) => {
-  const response: ApiResponse<Feedback[]> = {
+app.get('/api/items', (c) => {
+  const response: ApiResponse<Item[]> = {
     success: true,
     data: [
       {
         id: '1',
         userId: 'user-1',
-        message: 'Great product!',
-        rating: 5,
+        title: 'Sample Item',
+        description: 'This is a sample item from the API',
         createdAt: new Date(),
       },
     ],

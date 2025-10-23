@@ -7,11 +7,11 @@ export interface User {
   createdAt: Date
 }
 
-export interface Feedback {
+export interface Item {
   id: string
   userId: string
-  message: string
-  rating: number
+  title: string
+  description: string
   createdAt: Date
 }
 

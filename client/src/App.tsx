@@ -1,19 +1,19 @@
-import type {Feedback} from '@shared/types'
+import type {Item} from '@shared/types'
 import {formatDate} from '@shared/utils'
 import {useEffect, useState} from 'react'
-import {getFeedback} from '@/api/feedback'
+import {getItems} from '@/api/items'
 import viteLogo from '/vite.svg'
 import reactLogo from './assets/react.svg'
 import './App.css'
 
 function App() {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
+  const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>()
 
   useEffect(() => {
-    getFeedback()
-      .then(setFeedbacks)
+    getItems()
+      .then(setItems)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
@@ -28,20 +28,20 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>User Feedback Monorepo</h1>
+      <h1>Bun + Hono + React Monorepo</h1>
       <div className="card">
-        <h2>Feedback List</h2>
-        {loading && <p>Loading feedback...</p>}
+        <h2>API Data Example</h2>
+        {loading && <p>Loading items...</p>}
         {error && <p style={{color: 'red'}}>Error: {error}</p>}
         {!loading && !error && (
           <ul style={{textAlign: 'left', maxWidth: '500px', margin: '0 auto'}}>
-            {feedbacks.map((feedback) => (
-              <li key={feedback.id} style={{marginBottom: '1rem'}}>
-                <strong>Rating:</strong> {feedback.rating}/5
+            {items.map((item) => (
+              <li key={item.id} style={{marginBottom: '1rem'}}>
+                <strong>Title:</strong> {item.title}
                 <br />
-                <strong>Message:</strong> {feedback.message}
+                <strong>Description:</strong> {item.description}
                 <br />
-                <strong>Date:</strong> {formatDate(feedback.createdAt)}
+                <strong>Date:</strong> {formatDate(item.createdAt)}
               </li>
             ))}
           </ul>
@@ -50,7 +50,7 @@ function App() {
           ✨ This data comes from the Hono backend using shared types!
         </p>
       </div>
-      <p className="read-the-docs">Bun + Hono + React + Vite Monorepo</p>
+      <p className="read-the-docs">Monorepo Template with Type Safety</p>
     </>
   )
 }
