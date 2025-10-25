@@ -7,6 +7,7 @@ A modern full-stack monorepo template with Bun, Hono backend, React frontend, Po
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-7-purple)](https://vite.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8)](https://tailwindcss.com)
 [![Biome](https://img.shields.io/badge/Biome-2.2.7-60a5fa)](https://biomejs.dev)
 
 ## 🎯 What is This?
@@ -15,15 +16,17 @@ This is a **production-ready monorepo template** for building full-stack applica
 
 ## ✨ Features
 
-- ✅ **Modern Stack**: Hono + React 19 + Vite 7 + TypeScript
+- ✅ **Modern Stack**: Hono + React 19 + Vite 7 + TypeScript 5.9
+- ✅ **Tailwind CSS 4**: Latest Tailwind with Vite plugin integration
 - ✅ **Fast**: Powered by Bun for blazing fast package management and runtime
 - ✅ **Type Safety**: Shared types between frontend and backend
 - ✅ **Monorepo**: Efficient code sharing with Bun workspaces + Turborepo
 - ✅ **Database**: PostgreSQL 16 with schema and seed scripts
-- ✅ **Linting**: Biome.js for fast linting and formatting
+- ✅ **Linting**: Biome.js with Tailwind class sorting support
 - ✅ **Testing**: Bun test with coverage support
 - ✅ **Docker**: Production-ready multi-stage builds with docker-compose
 - ✅ **Hot Reload**: Development mode with instant updates
+- ✅ **Environment Variables**: Comprehensive env management with runtime config injection
 
 ## 📦 Project Structure
 
@@ -135,21 +138,22 @@ bun typecheck
 ```bash
 # Biome linting and formatting
 bun check           # Check without fixing
-bun check:fix       # Check and auto-fix
+bun check:fix       # Check and auto-fix (includes Tailwind class sorting)
 bun check:all       # typecheck + check
-bun check:all:fix   # typecheck + check with fixes
+bun check:all:fix   # typecheck + check with fixes (includes Tailwind sorting)
 
 # Individual operations
 bun lint            # Lint only
 bun format          # Format with write
 
 # Pre-commit workflow
-bun run precommit   # Runs check:all:fix + tests
+bun run precommit   # Runs check:all:fix + tests (includes Tailwind sorting)
 ```
 
 **Biome Configuration** (`biome.json`):
 - **Formatter**: 120 line width, 2 spaces, single quotes, no semicolons (asNeeded), no bracket spacing
 - **Linter**: Recommended rules + strict unused imports, type imports enforced, Node.js import protocol required
+- **Tailwind Sorting**: `nursery.useSortedClasses` enabled for automatic Tailwind CSS class ordering (requires `--unsafe` flag)
 - **Import Organization**: Auto-organize with URL → PACKAGE_WITH_PROTOCOL → NODE → PACKAGE → ALIAS → PATH → RELATIVE
 - **Overrides**: Tests allow `any` type, generated files disable all checks, CSS files allow unknown at-rules (Tailwind support)
 
@@ -224,6 +228,58 @@ import { api } from '@/utils/api'           // Client modules
 
 **⚠️ Critical**: When adding new client aliases, update both TypeScript config AND Vite alias configuration.
 
+## 🎨 Styling with Tailwind CSS
+
+The client uses **Tailwind CSS 4** with the official Vite plugin for optimal performance and modern features.
+
+### Setup
+```typescript
+// vite.config.ts
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+})
+```
+
+```css
+/* src/index.css */
+@import "tailwindcss";
+```
+
+### Class Sorting
+Biome.js automatically sorts Tailwind classes using the `useSortedClasses` rule:
+
+```bash
+# Tailwind class sorting is included in standard workflows:
+bun check:fix       # Auto-sorts Tailwind classes
+bun check:all:fix   # Type check + auto-sort Tailwind classes
+bun run precommit   # Full workflow with Tailwind sorting + tests
+
+# Manual sorting (if needed):
+bunx biome check --write --unsafe src/
+
+# Configured for: className, class, classList attributes
+# Also works in: clsx(), cva(), tw(), cn() functions
+```
+
+### TypeScript Configuration
+TypeScript 5.9+ with `moduleResolution: "bundler"` allows path aliases **without** the deprecated `baseUrl`:
+
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../packages/shared/src/*"]
+    }
+  }
+}
+```
+
+This configuration is TypeScript 7.0+ compatible and eliminates deprecation warnings.
+
 ## 📦 Workspace Packages
 
 ### `@monorepo/server`
@@ -248,12 +304,14 @@ app.get('/api/items', (c) => {
 
 ### `@monorepo/client`
 React + Vite frontend with:
-- React 19 with TypeScript
-- Path aliases (@, @shared)
+- React 19 with TypeScript 5.9
+- **Tailwind CSS 4** with @tailwindcss/vite plugin
+- Path aliases (@, @shared) - no `baseUrl` required with `moduleResolution: "bundler"`
 - Vite dev server with API proxy
 - Nginx configuration for production
 - Optimized Docker build
 - Entry point: `client/src/main.tsx`
+- Runtime environment variable injection via `config.js`
 
 ### `@monorepo/shared`
 Shared code between server and client:

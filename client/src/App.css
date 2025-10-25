@@ -11,6 +11,12 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
+/* Ensure logo links display side by side */
+a:has(.logo) {
+  display: inline-block;
+}
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
