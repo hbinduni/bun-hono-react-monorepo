@@ -6,6 +6,7 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json bun.lock* ./
 COPY server/package.json ./server/
+COPY client/package.json ./client/
 COPY packages/shared/package.json ./packages/shared/
 RUN bun install --frozen-lockfile
 
@@ -19,7 +20,9 @@ RUN bun run typecheck
 # Build server
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/server/node_modules ./server/node_modules
 COPY --from=shared-builder /app/packages/shared ./packages/shared
+COPY package.json ./
 COPY server ./server
 COPY tsconfig.json ./
 WORKDIR /app/server

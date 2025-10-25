@@ -34,6 +34,7 @@ packages/*/dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.build
 server/.env
 server/.env.local
 client/.env

@@ -1,6 +1,7 @@
 import type {ApiResponse, Item} from '@shared/types'
+import {config} from '@/config'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE_URL = config.VITE_API_URL
 
 export async function getItems(): Promise<Item[]> {
   const response = await fetch(`${API_BASE_URL}/api/items`)
