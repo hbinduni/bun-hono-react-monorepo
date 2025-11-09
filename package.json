@@ -36,7 +36,7 @@
     "db:fresh": "bun run db:drop && bun run db:create && bun run db:seed"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.2",
+    "@biomejs/biome": "^2.3.4",
     "@types/bun": "latest",
     "dotenv-cli": "^10.0.0",
     "turbo": "^2.6.0",
