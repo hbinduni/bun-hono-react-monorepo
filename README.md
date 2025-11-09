@@ -40,8 +40,14 @@ monorepo/
 │   └── package.json     # @monorepo/server
 ├── client/              # React + Vite frontend (TypeScript)
 │   ├── src/
+│   │   ├── components/  # Reusable components
+│   │   │   └── layout/  # Layout components (Header, Footer, Layout)
+│   │   ├── pages/       # Page components (Home, etc.)
+│   │   ├── api/         # API client layer
+│   │   ├── assets/      # Static assets
+│   │   ├── App.tsx      # Root application component
 │   │   ├── main.tsx     # Client entry point
-│   │   └── api/         # API client layer
+│   │   └── config.ts    # Runtime configuration
 │   ├── .env.example
 │   ├── nginx.conf
 │   ├── Dockerfile
@@ -67,7 +73,10 @@ monorepo/
 
 - **Root**: Turborepo orchestration, shared tooling (Biome, TypeScript)
 - **server/** (`@monorepo/server`): Hono API server running on Bun with hot reload
-- **client/** (`@monorepo/client`): React 19 + Vite 7 frontend with API proxy
+- **client/** (`@monorepo/client`): React 19 + Vite 7 frontend with component-based architecture
+  - `components/layout/` - Reusable layout components (Header, Footer, Layout)
+  - `pages/` - Page-level components (Home, etc.)
+  - `api/` - API client layer for backend communication
 - **packages/shared/** (`@monorepo/shared`): Shared TypeScript types and utilities (exports `.ts` source directly)
 
 ## 🚀 Quick Start
@@ -306,12 +315,46 @@ app.get('/api/items', (c) => {
 React + Vite frontend with:
 - React 19 with TypeScript 5.9
 - **Tailwind CSS 4** with @tailwindcss/vite plugin
+- Component-based architecture with `components/` and `pages/` folders
+- Layout system with Header, Footer, and Layout components
 - Path aliases (@, @shared) - no `baseUrl` required with `moduleResolution: "bundler"`
 - Vite dev server with API proxy
 - Nginx configuration for production
 - Optimized Docker build
 - Entry point: `client/src/main.tsx`
 - Runtime environment variable injection via `config.js`
+
+**Client Architecture:**
+
+The client follows a modern component-based architecture with clear separation of concerns:
+
+```
+client/src/
+├── components/          # Reusable UI components
+│   └── layout/         # Layout components used across pages
+│       ├── Header.tsx  # Site header with branding
+│       ├── Footer.tsx  # Site footer with version info
+│       ├── Layout.tsx  # Main layout wrapper
+│       └── index.ts    # Barrel exports
+├── pages/              # Page-level components
+│   ├── Home.tsx        # Home page with API data display
+│   └── index.ts        # Barrel exports
+├── api/                # API client layer
+│   └── items.ts        # Items API endpoints
+├── assets/             # Static assets
+│   └── react.svg       # React logo
+├── App.tsx             # Root component (wraps pages in Layout)
+├── App.css             # Global app styles
+├── main.tsx            # Application entry point
+├── config.ts           # Runtime configuration loader
+└── index.css           # Global styles with Tailwind imports
+```
+
+**Component Organization:**
+- `components/` - Shared, reusable components used across multiple pages
+- `pages/` - Top-level route components representing full pages
+- `api/` - Backend communication layer with typed API functions
+- Barrel exports (`index.ts`) for clean imports: `import {Layout} from '@/components/layout'`
 
 ### `@monorepo/shared`
 Shared code between server and client:
@@ -515,6 +558,7 @@ All application environment variables are now **runtime configurable**, meaning 
 - **Development**:
   - `server/.env` → Server variables (DATABASE_URL, PORT)
   - `client/.env` → Client variables (VITE_API_URL)
+  - `client/public/config.js` → Development placeholder (prevents 404 errors)
 
 - **Production**:
   - `.env.production` → Runtime configuration for docker-compose
@@ -522,6 +566,7 @@ All application environment variables are now **runtime configurable**, meaning 
     - Image registry settings (GHCR)
     - Server/client ports
     - Container names
+  - `/usr/share/nginx/html/config.js` → Generated at container startup by `docker-entrypoint.sh`
 
 - **Build Time** (local machine):
   - Export credentials for image registry:
@@ -529,6 +574,29 @@ All application environment variables are now **runtime configurable**, meaning 
     export GITHUB_USER=your-username
     export GITHUB_TOKEN=ghp_token
     ```
+
+**Runtime Configuration Setup:**
+
+The client uses a dual-configuration system for seamless development and production:
+
+1. **Development Mode** (`bun dev`):
+   - `client/public/config.js` serves as a placeholder to prevent 404 errors
+   - App reads configuration from `client/.env` via `import.meta.env.VITE_API_URL`
+   - Fallback: `http://localhost:3000` if env var not set
+
+2. **Production Mode** (Docker):
+   - `docker-entrypoint.sh` generates `config.js` with runtime values at container startup
+   - App reads `window.__RUNTIME_CONFIG__.VITE_API_URL` from generated config.js
+   - Change API URL by updating `.env.production` and restarting container (no rebuild needed)
+
+**Configuration Priority** (`client/src/config.ts`):
+```
+1. window.__RUNTIME_CONFIG__ (production - injected at runtime)
+   ↓
+2. import.meta.env.VITE_API_URL (development - from .env file)
+   ↓
+3. http://localhost:3000 (default fallback)
+```
 
 **Note**: PostgreSQL is not managed by docker-compose. Set `DATABASE_URL` to point to your external PostgreSQL instance (local VPS install, managed service, or separate container).
 

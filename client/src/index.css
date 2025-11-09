@@ -1,8 +1,1 @@
 @import "tailwindcss";
-
-/* Minimal reset - let Tailwind handle everything else */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
