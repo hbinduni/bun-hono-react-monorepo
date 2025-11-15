@@ -1,15 +1,27 @@
+/* Root container - no fixed width for full responsiveness */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
 }
 
+/* Logo responsive sizing */
 .logo {
-  height: 6em;
-  padding: 1.5em;
+  height: 4rem; /* 64px / 16px = 4rem (h-16) */
+  padding: 1rem; /* p-4 */
   will-change: filter;
   transition: filter 300ms;
+}
+
+@media (min-width: 640px) {
+  .logo {
+    height: 5rem; /* 80px / 16px = 5rem (sm:h-20) */
+    padding: 1.5rem; /* sm:p-6 */
+  }
+}
+
+@media (min-width: 768px) {
+  .logo {
+    height: 6rem; /* 96px / 16px = 6rem (md:h-24) */
+  }
 }
 
 /* Ensure logo links display side by side */
@@ -20,6 +32,7 @@ a:has(.logo) {
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -39,10 +52,29 @@ a:has(.logo) {
   }
 }
 
+/* Card responsive padding */
 .card {
-  padding: 2em;
+  padding: 1rem; /* p-4 */
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 1.5rem; /* sm:p-6 */
+  }
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 2rem; /* md:p-8 */
+  }
 }
 
 .read-the-docs {
-  color: #888;
+  color: rgb(107 114 128); /* gray-500 */
+}
+
+@media (prefers-color-scheme: dark) {
+  .read-the-docs {
+    color: rgb(156 163 175); /* dark:text-gray-400 */
+  }
 }

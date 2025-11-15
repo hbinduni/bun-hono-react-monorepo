@@ -3,23 +3,18 @@ import packageJson from '../../../package.json'
 
 export function Footer() {
   return (
-    <footer>
-      <p className="read-the-docs">Monorepo Template with Type Safety</p>
-      <div
-        style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          backgroundColor: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '8px',
-          fontSize: '0.85rem',
-          opacity: 0.7,
-        }}
-      >
-        <div style={{marginBottom: '0.5rem'}}>
-          <strong>Version:</strong> {packageJson.version}
-        </div>
-        <div>
-          <strong>API URL:</strong> {config.VITE_API_URL}
+    <footer className="w-full px-4 py-6 sm:px-6 lg:px-8 mt-auto">
+      <div className="max-w-7xl mx-auto text-center">
+        <p className="read-the-docs text-sm sm:text-base">Monorepo Template with Type Safety</p>
+        <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-white/5 dark:bg-black/10 rounded-lg text-xs sm:text-sm opacity-70 max-w-md mx-auto">
+          <div className="mb-2">
+            <strong className="font-semibold">Version:</strong>{' '}
+            <span className="text-gray-600 dark:text-gray-400">{packageJson.version}</span>
+          </div>
+          <div>
+            <strong className="font-semibold">API URL:</strong>{' '}
+            <span className="text-gray-600 dark:text-gray-400 break-all">{config.VITE_API_URL}</span>
+          </div>
         </div>
       </div>
     </footer>

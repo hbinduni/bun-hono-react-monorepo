@@ -30,6 +30,11 @@
       "trailingCommas": "none"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
@@ -48,7 +53,8 @@
       "a11y": {
         "noSvgWithoutTitle": "off",
         "useButtonType": "warn",
-        "noLabelWithoutControl": "off"
+        "noLabelWithoutControl": "off",
+        "useSemanticElements": "off"
       },
       "suspicious": {
         "noExplicitAny": "warn"
@@ -106,6 +112,16 @@
         "rules": {
           "suspicious": {
             "noUnknownAtRules": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/Skeleton.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
           }
         }
       }
