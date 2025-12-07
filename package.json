@@ -36,10 +36,10 @@
     "db:fresh": "bun run db:drop && bun run db:create && bun run db:seed"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.5",
+    "@biomejs/biome": "^2.3.8",
     "@types/bun": "latest",
     "dotenv-cli": "^10.0.0",
-    "turbo": "^2.6.1",
+    "turbo": "^2.6.3",
     "typescript": "~5.9.3"
   }
 }
