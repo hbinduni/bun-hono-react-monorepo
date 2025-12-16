@@ -25,6 +25,7 @@ This is a **production-ready monorepo template** for building full-stack applica
 - ✅ **Linting**: Biome.js with Tailwind class sorting support
 - ✅ **Testing**: Bun test with coverage support
 - ✅ **Docker**: Production-ready multi-stage builds with docker-compose
+- ✅ **Kubernetes**: Complete K8s deployment with comprehensive Makefile commands
 - ✅ **Hot Reload**: Development mode with instant updates
 - ✅ **Environment Variables**: Comprehensive env management with runtime config injection
 
@@ -391,6 +392,13 @@ This template uses **GitHub Container Registry (GHCR)** for Docker images. The d
 
 See [DOCKER.md](./DOCKER.md) for comprehensive deployment guide.
 
+### ☸️ Kubernetes Deployment
+
+For production Kubernetes deployments, see [KUBERNETES.md](./KUBERNETES.md) for:
+- Complete Kubernetes manifests (deployments, services, configmaps, secrets, ingress)
+- 40+ Makefile commands for K8s management
+- Deployment, scaling, monitoring, and troubleshooting guides
+
 ### Building and Pushing Images
 
 **Prerequisites:**
@@ -675,6 +683,7 @@ Configured in `turbo.json`:
 - [ENV_VARS.md](./ENV_VARS.md) - **Complete environment variables reference**
 - [TEMPLATE.md](./TEMPLATE.md) - How to use this as a project template
 - [DOCKER.md](./DOCKER.md) - Docker deployment guide
+- [KUBERNETES.md](./KUBERNETES.md) - Kubernetes deployment guide
 - [QUICK_START.md](./QUICK_START.md) - Quick reference guide
 
 ## 🤝 Contributing
