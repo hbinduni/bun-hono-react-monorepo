@@ -267,6 +267,21 @@ pids
 .biome-cache/
 
 # ===========================
+# Kubernetes
+# ===========================
+# Kubernetes secrets (generated from templates)
+k8s/secret.yaml
+k8s/imagepullsecret.yaml
+
+# Kubernetes environment files
+.env.k8s
+.env.k8s.local
+
+# Keep templates and examples
+!k8s/*.template
+!.env.k8s.example
+
+# ===========================
 # Custom Project Files
 # ===========================
 # Add any project-specific files here
