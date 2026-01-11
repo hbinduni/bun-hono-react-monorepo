@@ -57,7 +57,8 @@
         "useSemanticElements": "off"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noVar": "error"
       },
       "nursery": {
         "useSortedClasses": {
