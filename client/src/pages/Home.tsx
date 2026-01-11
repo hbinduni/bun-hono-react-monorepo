@@ -1,10 +1,10 @@
+import {getItems} from '@client/api/items'
+import {Button} from '@client/components/ui/Button'
+import {Card, CardContent, CardHeader, CardTitle} from '@client/components/ui/Card'
+import {SkeletonList} from '@client/components/ui/Skeleton'
 import type {Item} from '@shared/types'
 import {formatDate} from '@shared/utils'
 import {useCallback, useEffect, useState} from 'react'
-import {getItems} from '@/api/items'
-import {Button} from '@/components/ui/Button'
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/Card'
-import {SkeletonList} from '@/components/ui/Skeleton'
 
 export function Home() {
   const [items, setItems] = useState<Item[]>([])

@@ -28,7 +28,7 @@
     /* Path Aliases */
     "paths": {
       "@shared/*": ["../packages/shared/src/*"],
-      "@/*": ["./src/*"]
+      "@client/*": ["./src/*"]
     }
   },
   "include": ["src"]

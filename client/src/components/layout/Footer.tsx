@@ -1,4 +1,4 @@
-import {config} from '@/config'
+import {config} from '@client/config'
 import packageJson from '../../../package.json'
 
 export function Footer() {

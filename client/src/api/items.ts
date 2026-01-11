@@ -1,5 +1,5 @@
+import {config} from '@client/config'
 import type {ApiResponse, Item} from '@shared/types'
-import {config} from '@/config'
 
 const API_BASE_URL = config.VITE_API_URL
 

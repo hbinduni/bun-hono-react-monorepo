@@ -1,4 +1,4 @@
-import reactLogo from '@/assets/react.svg'
+import reactLogo from '@client/assets/react.svg'
 import viteLogo from '/vite.svg'
 
 export function Header() {

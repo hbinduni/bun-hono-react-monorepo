@@ -1,5 +1,5 @@
-import {Layout} from '@/components/layout'
-import {Home} from '@/pages'
+import {Layout} from '@client/components/layout'
+import {Home} from '@client/pages'
 import './App.css'
 
 function App() {
