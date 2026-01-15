@@ -76,6 +76,12 @@ lerna-debug.log*
 *.tsbuildinfo.*
 tsconfig.tsbuildinfo
 
+# TypeScript compiled output in src directories (Bun runs TS directly)
+**/src/**/*.js
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
+**/src/**/*.js.map
+
 # ===========================
 # Package Managers
 # ===========================
