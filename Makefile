@@ -1,7 +1,7 @@
 # Makefile for Bun + Hono + React Monorepo
 # Build and push Docker images to GitHub Container Registry
 
-.PHONY: help build-server build-client build-all push-server push-client push-all deploy login test dev
+.PHONY: help build-server build-client build-all push-server push-client push-all deploy login test dev version-up rollout-restart rollout-status
 .PHONY: k8s-deploy k8s-deploy-server k8s-deploy-client k8s-update k8s-status k8s-logs-server k8s-logs-client
 .PHONY: k8s-reload-server k8s-reload-client k8s-stop k8s-delete k8s-generate-secret k8s-create-image-pull-secret
 .PHONY: k8s-pods k8s-services k8s-describe k8s-scale-server k8s-scale-client k8s-reload k8s-delete-namespace
@@ -11,7 +11,7 @@ REGISTRY := ghcr.io
 GITHUB_USER ?= $(shell echo $$GITHUB_USER)
 GITHUB_TOKEN ?= $(shell echo $$GITHUB_TOKEN)
 IMAGE_VERSION ?= latest
-PROJECT_NAME ?= bun-hono-react-monorepo
+PROJECT_NAME := bun-hono-react-monorepo
 
 # Image names
 SERVER_IMAGE := $(REGISTRY)/$(GITHUB_USER)/$(PROJECT_NAME)-server
@@ -71,7 +71,7 @@ build-client: ## Build client Docker image (VITE_API_URL is now runtime!)
 	@echo "$(BLUE)Building client image...$(NC)"
 	docker build -f client/Dockerfile -t $(CLIENT_IMAGE):$(IMAGE_VERSION) -t $(CLIENT_IMAGE):latest .
 	@echo "$(GREEN)✓ Client image built: $(CLIENT_IMAGE):$(IMAGE_VERSION)$(NC)"
-	@echo "$(GREEN)✓ Note: VITE_API_URL is now configured at runtime via .env.production$(NC)"
+	@echo "$(GREEN)✓ Note: VITE_API_URL is configured at runtime$(NC)"
 
 build-all: build-server build-client ## Build all Docker images (server + client)
 	@echo "$(GREEN)✓ All images built successfully$(NC)"
@@ -95,8 +95,8 @@ deploy: login build-all push-all ## Complete deployment workflow (login + build 
 	@echo "$(GREEN)✓ Deployment complete!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Next steps:$(NC)"
-	@echo "  1. Copy .env.production and docker-compose.yml to your VPS"
-	@echo "  2. On VPS, run: docker compose pull && docker compose up -d"
+	@echo "  1. Apply Kubernetes manifests: make k8s-deploy"
+	@echo "  2. Check status: make k8s-status"
 
 clean: ## Remove local Docker images
 	@echo "$(BLUE)Removing local images...$(NC)"
@@ -126,6 +126,33 @@ dev: ## Start local development environment
 test: ## Run tests locally
 	bun test
 
+version-up: ## Bump patch version in both client and server package.json
+	@echo "$(BLUE)Bumping patch version...$(NC)"
+	@cd server && npm version patch --no-git-tag-version 2>/dev/null || true
+	@cd client && npm version patch --no-git-tag-version 2>/dev/null || true
+	@SERVER_VERSION=$$(grep '"version"' server/package.json | sed 's/.*"version": "\(.*\)".*/\1/'); \
+	CLIENT_VERSION=$$(grep '"version"' client/package.json | sed 's/.*"version": "\(.*\)".*/\1/'); \
+	echo "$(GREEN)✓ Server version: $$SERVER_VERSION$(NC)"; \
+	echo "$(GREEN)✓ Client version: $$CLIENT_VERSION$(NC)"
+
+rollout-restart: ## Restart server and client deployments (rollout restart)
+	@echo "$(BLUE)Restarting deployments...$(NC)"
+	kubectl rollout restart deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
+	kubectl rollout restart deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
+	@echo "$(GREEN)✓ Rollout restart initiated for both server and client$(NC)"
+	@echo "$(YELLOW)Run 'make rollout-status' to monitor progress$(NC)"
+
+rollout-status: ## Check rollout status of server and client deployments
+	@echo "$(BLUE)Checking rollout status...$(NC)"
+	@echo ""
+	@echo "$(YELLOW)Server:$(NC)"
+	kubectl rollout status deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
+	@echo ""
+	@echo "$(YELLOW)Client:$(NC)"
+	kubectl rollout status deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
+	@echo ""
+	@echo "$(GREEN)✓ Rollout complete$(NC)"
+
 # ============================================================================
 # Kubernetes Deployment Commands
 # ============================================================================
@@ -135,16 +162,6 @@ k8s-check-context: ## Check current Kubernetes context
 	@echo "  Context: $(K8S_CONTEXT)"
 	@echo "  Namespace: $(K8S_NAMESPACE)"
 	@kubectl cluster-info
-
-k8s-update-images: ## Update image references in K8s manifests with GITHUB_USER
-	@echo "$(BLUE)Updating image references in Kubernetes manifests...$(NC)"
-	@if [ -z "$(GITHUB_USER)" ]; then \
-		echo "$(RED)Error: GITHUB_USER is not set$(NC)"; \
-		exit 1; \
-	fi
-	@sed -i "s|ghcr.io/GITHUB_USER/|ghcr.io/$(GITHUB_USER)/|g" k8s/server-deployment.yaml
-	@sed -i "s|ghcr.io/GITHUB_USER/|ghcr.io/$(GITHUB_USER)/|g" k8s/client-deployment.yaml
-	@echo "$(GREEN)✓ Image references updated$(NC)"
 
 k8s-generate-secret: ## Generate Kubernetes secret from environment variables
 	@echo "$(BLUE)Generating Kubernetes secret...$(NC)"
@@ -198,13 +215,13 @@ k8s-apply-secret: ## Apply Secret (must exist in k8s/secret.yaml)
 	kubectl apply -f k8s/secret.yaml
 	@echo "$(GREEN)✓ Secret applied$(NC)"
 
-k8s-deploy-server: k8s-update-images ## Deploy server to Kubernetes
+k8s-deploy-server: ## Deploy server to Kubernetes
 	@echo "$(BLUE)Deploying server to Kubernetes...$(NC)"
 	kubectl apply -f k8s/server-deployment.yaml
 	kubectl apply -f k8s/server-service.yaml
 	@echo "$(GREEN)✓ Server deployed$(NC)"
 
-k8s-deploy-client: k8s-update-images ## Deploy client to Kubernetes
+k8s-deploy-client: ## Deploy client to Kubernetes
 	@echo "$(BLUE)Deploying client to Kubernetes...$(NC)"
 	kubectl apply -f k8s/client-deployment.yaml
 	kubectl apply -f k8s/client-service.yaml
@@ -214,24 +231,22 @@ k8s-deploy-ingress: ## Deploy ingress
 	@echo "$(BLUE)Deploying ingress...$(NC)"
 	kubectl apply -f k8s/ingress.yaml
 	@echo "$(GREEN)✓ Ingress deployed$(NC)"
-	@echo "$(YELLOW)Note: Update k8s/ingress.yaml with your domain$(NC)"
 
-k8s-deploy: k8s-apply-namespace k8s-apply-configmap k8s-deploy-server k8s-deploy-client ## Deploy all resources to Kubernetes
+k8s-deploy: k8s-apply-namespace k8s-apply-configmap k8s-deploy-server k8s-deploy-client k8s-deploy-ingress ## Deploy all resources to Kubernetes
 	@echo "$(GREEN)✓ All resources deployed successfully!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Next steps:$(NC)"
 	@echo "  1. Create secret: make k8s-generate-secret && make k8s-apply-secret"
-	@echo "  2. Check status: make k8s-status"
-	@echo "  3. View logs: make k8s-logs-server or make k8s-logs-client"
-	@echo "  4. Get external IP: kubectl get svc client-service -n $(K8S_NAMESPACE)"
+	@echo "  2. Create image pull secret: make k8s-create-image-pull-secret"
+	@echo "  3. Check status: make k8s-status"
 
-k8s-update: k8s-update-images ## Update deployments (rolling update)
+k8s-update: ## Update deployments (rolling update)
 	@echo "$(BLUE)Updating deployments...$(NC)"
 	kubectl apply -f k8s/configmap.yaml
 	kubectl apply -f k8s/server-deployment.yaml
 	kubectl apply -f k8s/client-deployment.yaml
-	kubectl rollout status deployment/server-deployment -n $(K8S_NAMESPACE)
-	kubectl rollout status deployment/client-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Deployments updated$(NC)"
 
 k8s-status: ## Check deployment status
@@ -245,6 +260,9 @@ k8s-status: ## Check deployment status
 	@echo ""
 	@echo "$(YELLOW)Services:$(NC)"
 	kubectl get services -n $(K8S_NAMESPACE)
+	@echo ""
+	@echo "$(YELLOW)Ingress:$(NC)"
+	kubectl get ingress -n $(K8S_NAMESPACE)
 
 k8s-pods: ## List all pods
 	@echo "$(BLUE)Listing pods...$(NC)"
@@ -263,11 +281,11 @@ k8s-describe: ## Describe all resources
 
 k8s-describe-server: ## Describe server resources
 	@echo "$(BLUE)Describing server deployment...$(NC)"
-	kubectl describe deployment server-deployment -n $(K8S_NAMESPACE)
+	kubectl describe deployment bun-hono-react-server -n $(K8S_NAMESPACE)
 
 k8s-describe-client: ## Describe client resources
 	@echo "$(BLUE)Describing client deployment...$(NC)"
-	kubectl describe deployment client-deployment -n $(K8S_NAMESPACE)
+	kubectl describe deployment bun-hono-react-client -n $(K8S_NAMESPACE)
 
 k8s-logs-server: ## View server logs
 	@echo "$(BLUE)Fetching server logs...$(NC)"
@@ -291,22 +309,22 @@ k8s-logs-all: ## View all logs
 
 k8s-exec-server: ## Execute shell in server pod
 	@echo "$(BLUE)Opening shell in server pod...$(NC)"
-	kubectl exec -it deployment/server-deployment -n $(K8S_NAMESPACE) -- /bin/sh
+	kubectl exec -it deployment/bun-hono-react-server -n $(K8S_NAMESPACE) -- /bin/sh
 
 k8s-exec-client: ## Execute shell in client pod
 	@echo "$(BLUE)Opening shell in client pod...$(NC)"
-	kubectl exec -it deployment/client-deployment -n $(K8S_NAMESPACE) -- /bin/sh
+	kubectl exec -it deployment/bun-hono-react-client -n $(K8S_NAMESPACE) -- /bin/sh
 
 k8s-reload-server: ## Restart server pods (rollout restart)
 	@echo "$(BLUE)Restarting server pods...$(NC)"
-	kubectl rollout restart deployment/server-deployment -n $(K8S_NAMESPACE)
-	kubectl rollout status deployment/server-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout restart deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Server restarted$(NC)"
 
 k8s-reload-client: ## Restart client pods (rollout restart)
 	@echo "$(BLUE)Restarting client pods...$(NC)"
-	kubectl rollout restart deployment/client-deployment -n $(K8S_NAMESPACE)
-	kubectl rollout status deployment/client-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout restart deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Client restarted$(NC)"
 
 k8s-reload: k8s-reload-server k8s-reload-client ## Restart all pods
@@ -314,53 +332,53 @@ k8s-reload: k8s-reload-server k8s-reload-client ## Restart all pods
 
 k8s-scale-server: ## Scale server deployment (REPLICAS=N)
 	@echo "$(BLUE)Scaling server to $(REPLICAS) replicas...$(NC)"
-	kubectl scale deployment/server-deployment --replicas=$(REPLICAS) -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-server --replicas=$(REPLICAS) -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Server scaled to $(REPLICAS) replicas$(NC)"
 
 k8s-scale-client: ## Scale client deployment (REPLICAS=N)
 	@echo "$(BLUE)Scaling client to $(REPLICAS) replicas...$(NC)"
-	kubectl scale deployment/client-deployment --replicas=$(REPLICAS) -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-client --replicas=$(REPLICAS) -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Client scaled to $(REPLICAS) replicas$(NC)"
 
 k8s-stop: ## Stop all deployments (scale to 0)
 	@echo "$(BLUE)Stopping all deployments...$(NC)"
-	kubectl scale deployment/server-deployment --replicas=0 -n $(K8S_NAMESPACE)
-	kubectl scale deployment/client-deployment --replicas=0 -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-server --replicas=0 -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-client --replicas=0 -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ All deployments stopped (scaled to 0)$(NC)"
 
 k8s-start: ## Start all deployments (scale to default replicas)
 	@echo "$(BLUE)Starting all deployments...$(NC)"
-	kubectl scale deployment/server-deployment --replicas=2 -n $(K8S_NAMESPACE)
-	kubectl scale deployment/client-deployment --replicas=2 -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-server --replicas=2 -n $(K8S_NAMESPACE)
+	kubectl scale deployment/bun-hono-react-client --replicas=2 -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ All deployments started$(NC)"
 
 k8s-rollback-server: ## Rollback server deployment
 	@echo "$(BLUE)Rolling back server deployment...$(NC)"
-	kubectl rollout undo deployment/server-deployment -n $(K8S_NAMESPACE)
-	kubectl rollout status deployment/server-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout undo deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Server rolled back$(NC)"
 
 k8s-rollback-client: ## Rollback client deployment
 	@echo "$(BLUE)Rolling back client deployment...$(NC)"
-	kubectl rollout undo deployment/client-deployment -n $(K8S_NAMESPACE)
-	kubectl rollout status deployment/client-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout undo deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
+	kubectl rollout status deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Client rolled back$(NC)"
 
 k8s-history-server: ## View server deployment history
 	@echo "$(BLUE)Server deployment history:$(NC)"
-	kubectl rollout history deployment/server-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout history deployment/bun-hono-react-server -n $(K8S_NAMESPACE)
 
 k8s-history-client: ## View client deployment history
 	@echo "$(BLUE)Client deployment history:$(NC)"
-	kubectl rollout history deployment/client-deployment -n $(K8S_NAMESPACE)
+	kubectl rollout history deployment/bun-hono-react-client -n $(K8S_NAMESPACE)
 
 k8s-delete: ## Delete all deployments and services (keep namespace)
 	@echo "$(BLUE)Deleting all resources...$(NC)"
+	kubectl delete -f k8s/ingress.yaml --ignore-not-found=true
 	kubectl delete -f k8s/client-deployment.yaml --ignore-not-found=true
 	kubectl delete -f k8s/client-service.yaml --ignore-not-found=true
 	kubectl delete -f k8s/server-deployment.yaml --ignore-not-found=true
 	kubectl delete -f k8s/server-service.yaml --ignore-not-found=true
-	kubectl delete -f k8s/ingress.yaml --ignore-not-found=true
 	@echo "$(GREEN)✓ All resources deleted$(NC)"
 
 k8s-delete-namespace: ## Delete entire namespace (WARNING: deletes everything)
@@ -369,24 +387,15 @@ k8s-delete-namespace: ## Delete entire namespace (WARNING: deletes everything)
 	kubectl delete namespace $(K8S_NAMESPACE)
 	@echo "$(GREEN)✓ Namespace deleted$(NC)"
 
-k8s-get-external-ip: ## Get external IP/URL for client service
-	@echo "$(BLUE)Getting external IP for client service...$(NC)"
-	@echo "$(YELLOW)Client Service:$(NC)"
-	kubectl get service client-service -n $(K8S_NAMESPACE)
-	@echo ""
-	@echo "$(YELLOW)Note:$(NC) For LoadBalancer, check EXTERNAL-IP column"
-	@echo "$(YELLOW)Note:$(NC) For NodePort, use: <node-ip>:<node-port>"
-	@echo "$(YELLOW)Note:$(NC) For Ingress, check: kubectl get ingress -n $(K8S_NAMESPACE)"
-
 k8s-port-forward-server: ## Port forward to server (localhost:3000)
 	@echo "$(BLUE)Port forwarding to server on localhost:3000...$(NC)"
 	@echo "$(YELLOW)Press Ctrl+C to stop$(NC)"
-	kubectl port-forward -n $(K8S_NAMESPACE) service/server-service 3000:3000
+	kubectl port-forward -n $(K8S_NAMESPACE) service/bun-hono-react-server 3000:3000
 
 k8s-port-forward-client: ## Port forward to client (localhost:8080)
 	@echo "$(BLUE)Port forwarding to client on localhost:8080...$(NC)"
 	@echo "$(YELLOW)Press Ctrl+C to stop$(NC)"
-	kubectl port-forward -n $(K8S_NAMESPACE) service/client-service 8080:80
+	kubectl port-forward -n $(K8S_NAMESPACE) service/bun-hono-react-client 8080:80
 
 k8s-events: ## View recent events in namespace
 	@echo "$(BLUE)Recent events in namespace:$(NC)"
