@@ -4,9 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun --packages external --minify",
-    "start": "bun run dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "build": "bunx tsgo --noEmit && bun build src/index.ts --outdir dist --target bun --packages external --minify",
+    "typecheck": "bunx tsgo --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",

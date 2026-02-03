@@ -310,6 +310,59 @@ export const oauthAccountRepository = {
 // Item Repository
 // ============================================================================
 
+// ============================================================================
+// Seed Data (Development Only)
+// ============================================================================
+
+const SEED_USER_ID = generateUserId()
+
+function seedData() {
+  const now = new Date()
+
+  // Seed a demo user
+  const demoUser: StoredUser = {
+    id: SEED_USER_ID,
+    email: 'demo@example.com',
+    name: 'Demo User',
+    passwordHash: null,
+    role: UserRoleConst.USER,
+    emailVerified: true,
+    createdAt: now,
+    updatedAt: now,
+  }
+  users.set(SEED_USER_ID, demoUser)
+  usersByEmail.set(demoUser.email, SEED_USER_ID)
+
+  // Seed items
+  const seedItems: {title: string; description: string; status: 'active' | 'completed' | 'archived'}[] = [
+    {title: 'Set up project structure', description: 'Initialize monorepo with Turborepo', status: 'completed'},
+    {title: 'Add authentication', description: 'Implement JWT-based auth with OAuth support', status: 'active'},
+    {title: 'Build dashboard UI', description: 'Create main dashboard with item management', status: 'active'},
+    {title: 'Write API tests', description: 'Add integration tests for all endpoints', status: 'archived'},
+  ]
+
+  for (const seed of seedItems) {
+    const id = generateItemId()
+    items.set(id, {
+      id,
+      userId: SEED_USER_ID,
+      title: seed.title,
+      description: seed.description,
+      status: seed.status,
+      createdAt: now,
+      updatedAt: now,
+    })
+  }
+
+  console.log(`[seed] Loaded ${seedItems.length} items for demo user (${SEED_USER_ID})`)
+}
+
+seedData()
+
+// ============================================================================
+// Item Repository
+// ============================================================================
+
 export const itemRepository = {
   /**
    * Create a new item
