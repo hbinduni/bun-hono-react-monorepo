@@ -126,6 +126,7 @@ bun dev:client  # Client only (http://localhost:5173)
 - Client runs on port 5173 with Vite HMR
 - Vite dev server proxies `/api/*` → `http://localhost:3000` (see `client/vite.config.ts`)
 - Turborepo runs tasks in parallel with caching
+- Server auto-loads seed data (demo user + sample items) — no database setup needed to start
 
 ## 🔧 Development Workflows
 
@@ -139,7 +140,7 @@ bun build
 bun build:server  # Outputs to server/dist/
 bun build:client  # Outputs to client/dist/
 
-# Type check all packages
+# Type check all packages (uses tsgo - native TypeScript compiler)
 bun typecheck
 ```
 
@@ -298,19 +299,15 @@ Hono-based backend server with:
 - CORS configuration for frontend
 - Path aliases (@server, @shared)
 - Hot reload in development (`bun run --hot`)
+- In-memory mock database with seed data (demo user + sample items)
 - Optimized Docker build
 - Entry point: `server/src/index.ts`
 
-**Example endpoint:**
-```typescript
-app.get('/api/items', (c) => {
-  const response: ApiResponse<Item[]> = {
-    success: true,
-    data: [/* items */]
-  }
-  return c.json(response)
-})
-```
+**Mock Database & Seed Data:**
+
+The server uses an in-memory repository layer (`server/src/lib/db.ts`) with seed data auto-loaded on startup. This provides working CRUD endpoints out of the box without requiring PostgreSQL for local development. The repository interface is designed for easy swap to a real database (Drizzle, Prisma, or raw SQL).
+
+> **Note**: In-memory data resets on every server restart. Connect PostgreSQL for persistent storage in production.
 
 ### `@monorepo/client`
 React + Vite frontend with:
@@ -647,6 +644,7 @@ docker compose --env-file .env.production up -d
 
 ### Build Tools
 - **Turborepo**: Monorepo build system with caching
+- **tsgo**: Native TypeScript compiler for fast type checking
 - **Biome.js 2.2.7**: Linter and formatter
 
 ### DevOps
