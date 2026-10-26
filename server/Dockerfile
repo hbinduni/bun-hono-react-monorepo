@@ -1,5 +1,5 @@
 # Server Dockerfile
-FROM oven/bun:1.3.0-slim AS base
+FROM oven/bun:1.4.4-slim AS base
 WORKDIR /app
 
 # Install dependencies only when needed
