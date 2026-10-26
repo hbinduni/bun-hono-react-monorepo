@@ -1,0 +1,44 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directories:
+      - /
+    schedule:
+      interval: weekly
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+    schedule:
+      interval: weekly
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: github-actions
+    directories:
+      - /
+    schedule:
+      interval: weekly
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: docker
+    directories:
+      - /client
+      - /k8s
+      - /server
+    schedule:
+      interval: weekly
+    groups:
+      compatible-updates:
+        update-types:
+          - minor
+          - patch
