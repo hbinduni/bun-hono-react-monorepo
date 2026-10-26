@@ -30,5 +30,5 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.4"
-      - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun audit
+      - run: bun --no-env-file install --frozen-lockfile --ignore-scripts
+      - run: bun --no-env-file audit
